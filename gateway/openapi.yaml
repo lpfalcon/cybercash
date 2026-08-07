@@ -11,7 +11,7 @@ paths:
       summary: Unified endpoint for Challenge and Validation
       operationId: handleCybercash
       x-google-backend:
-        address: https://cybercash-gateway-319841625898.us-central1.run.app
+        address: ${function_url}
         path_translation: CONSTANT_ADDRESS
         deadline: 30.0
       responses:

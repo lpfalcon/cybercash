@@ -232,6 +232,8 @@ Durante las pruebas de estrés ejecutadas en el entorno `cybercash-2026-producti
 * **Contribuidores:**
   - [Laura Falcón](https://www.github.com/lpfalcon)
   - [Luisa Guerrero](https://www.github.com/luisaguerrero1421)
+  - [Antuane Huaman](https://www.github.com/github0dot5Ane)
+
 
 * **Iniciativa:** Women CISO 2026
 * **Entorno de Despliegue:** Google Cloud Platform (`cybercash-2026-production`)
