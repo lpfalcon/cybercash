@@ -1,0 +1,3 @@
+functions-framework==3.*
+google-cloud-aiplatform
+pymongo[srv]==4.6.2
