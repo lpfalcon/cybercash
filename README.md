@@ -1,41 +1,83 @@
 # 🛡️ CyberCash 2026: Defensa Perimetral Adaptativa
 
 > **Defensa Perimetral Adaptativa mediante Inteligencia Artificial y Costo Computacional Asimétrico**  
-> *Desarrollado  para la iniciativa **Women CISO 2026**.*
+> *Desarrollado para la iniciativa **Women CISO 2026**.*
 
 ---
 
 ## 📌 Resumen Ejecutivo (Abstract)
 
-**CyberCash 2026** propone un cambio de paradigma radical en la seguridad perimetral. Al fusionar la capacidad predictiva de la Inteligencia Artificial de última generación (**Gemini 2.5 Flash en Vertex AI**) con la robustez criptográfica de los algoritmos *Proof-of-Work* (**Hashcash / SHA-256**), el sistema elimina la asimetría económica que tradicionalmente beneficia a los atacantes.
+**CyberCash 2026** propone un cambio de paradigma radical en la seguridad perimetral para arquitecturas Serverless. Al fusionar la capacidad predictiva de la Inteligencia Artificial de última generación (**Gemini 2.5 Flash-Lite en Vertex AI**) con la robustez de los algoritmos *Proof-of-Work* (**Hashcash / SHA-256**), el sistema elimina la asimetría económica que tradicionalmente beneficia a los atacantes.
 
-En lugar de recurrir a bloqueos binarios que suelen generar falsos positivos, CyberCash impone un **"impuesto computacional" dinámico**. Este impuesto escala proporcionalmente al nivel de riesgo detectado en tiempo real, obligando a los agentes maliciosos a consumir recursos críticos (CPU y tiempo) antes de poder interactuar con los activos sensibles.
+En lugar de recurrir a bloqueos binarios por IP que generan falsos positivos en redes compartidas, CyberCash impone un **"impuesto computacional" dinámico**. Este impuesto escala proporcionalmente al nivel de riesgo detectado en tiempo real, obligando a los agentes maliciosos a saturar su propia CPU antes de poder interactuar con los activos sensibles del servidor.
 
 ---
 
 ## 💥 Planteamiento del Problema
 
-En el ecosistema actual de la ciberseguridad, existe una desigualdad económica y operativa crítica:
+En el ecosistema actual de ciberseguridad, existe una disparidad crítica:
 
-* **El Atacante:** Ejecutar ataques de denegación de servicio (DDoS) o de fuerza bruta resulta extremadamente económico y requiere recursos financieros mínimos.
-* **La Empresa:** Por el contrario, la defensa y mitigación exigen una infraestructura costosa y una gestión de recursos constante, la cual suele verse desbordada ante ataques volumétricos.
+* **El Atacante:** Ejecutar ataques de denegación de servicio (DDoS), *scraping* masivo o fuerza bruta es sumamente económico y requiere recursos mínimos gracias a la ejecución multihilo concurrente.
+* **La Empresa:** La defensa y mitigación exigen infraestructuras costosas que suelen colapsar su base de datos o agotar el presupuesto Cloud al intentar procesar miles de peticiones maliciosas por segundo.
 
-Esta disparidad permite a los atacantes perpetrar miles de intentos sin sufrir ninguna penalización, logrando agotar la disponibilidad del servidor objetivo mientras sus propios costos operativos se mantienen prácticamente en cero.
-
----
-
-## 💡 La Solución: Escudo Heurístico y Fricción Computacional
-
-CyberCash introduce el concepto de **"fricción computacional inteligente"**. El sistema adopta el algoritmo original de Hashcash no como un sistema monetario, sino como una barrera de entrada adaptativa que incrementa su complejidad (se "espesa") al detectar anomalías en el tráfico de red.
-
-### 🛠️ Stack Tecnológico
-* **Runtime:** Python 3.12 desplegado en arquitectura *Serverless* sobre **Google Cloud Run** / **Cloud Functions**.
-* **Cerebro de Inferencia:** **Vertex AI** con el modelo **Gemini 2.5 Flash**, seleccionado por su baja latencia y amplia ventana de contexto.
-* **Capa de Persistencia:** **MongoDB Atlas** (NoSQL) para registrar y consultar telemetría de red en tiempo real.
-* **Protocolo de Desafío:** **Hashcash (SHA-256)** para la generación dinámica de Pruebas de Trabajo (*Proof-of-Work*).
+CyberCash invierte esta relación trasladando el 99% del consumo computacional al atacante mientras el servidor valida las peticiones en una fracción de milisegundo.
 
 ---
 
+## 💡 Arquitectura de Bucle Cerrado (*Closed-Loop Cyber Defense*)
+
+El sistema se compone de dos microservicios Serverless independientes desacoplados para garantizar baja latencia y alta disponibilidad:
+
+1. **API Gateway & Gatekeeper (`src/gateway`):**
+   * **Fast Path:** Autentica usuarios legítimos mediante tokens firmados con **HMAC SHA-256** (libres de estado / *stateless*).
+   * **Protección Local de BD:** Utiliza un caché local en RAM (`LOCAL_PENALTY_CACHE`) para filtrar atacantes recurrentes sin saturar MongoDB.
+   * **Anti-Race Condition:** Emplea búsquedas y borrados atómicos (`find_one_and_delete`) para impedir que un script multihilo reutilice un mismo desafío.
+
+2. **AI Threat Hunter & Scheduler (`src/scheduler`):**
+   * Agrega la telemetría almacenada en la colección de auditoría en ventanas deslizantes de 15 minutos.
+   * Evalúa métricas avanzadas (ratio de fallo en PoW, tasa de peticiones/minuto) mediante **Gemini 2.5 Flash-Lite**.
+   * Emite penalizaciones estructuradas (**JSON Schema**) guardadas en MongoDB con TTL automático que el Gateway consume en tiempo real.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+* **Runtime:** Python 3.12 en **Google Cloud Functions / Cloud Run**.
+* **Infraestructura como Código (IaC):** **Terraform** + OpenAPI / Swagger Specification.
+* **Cerebro de Inferencia:** **Vertex AI** con **Gemini 2.5 Flash-Lite** (Structured JSON Output).
+* **Capa de Persistencia:** **MongoDB Atlas** con Índices TTL automáticos y consultas atómicas (`UpdateOne`, `find_one_and_update`).
+* **Seguridad & Protocolos:** Hashcash (SHA-256) para Pruebas de Trabajo y firmas criptográficas HMAC SHA-256.
+* **Entorno y Paquetes:** `uv` para gestión ultrasensible de dependencias Python.
+
+---
+
+## 📂 Estructura del Repositorio
+
+```text
+CyberCash_terraform/
+├── src/                        # Código fuente Serverless
+│   ├── gateway/                # API Gateway, validación HMAC y verificación PoW
+│   │   ├── main.py
+│   │   └── requirements.txt
+│   └── scheduler/              # Threat Hunter asíncrono con Gemini AI
+│       ├── main.py
+│       └── requirements.txt
+│
+├── terraform/                  # Aprovisionamiento automatizado IaC (GCP)
+│   ├── gateway/
+│   │   └── openapi.yaml        # Especificación OpenAPI
+│   ├── main.tf                 # Cloud Functions, API Gateway, IAM
+│   ├── provider.tf
+│   ├── variables.tf
+│   └── outputs.tf
+│
+├── benchmark.py                # Medición de tiempos de respuesta y latencia
+├── botnet.py                   # Simulador de distribución de peticiones
+├── multithreading.py           # Test de estrés/ataque multihilo concurrente
+├── hashcash.py                 # Algoritmo cliente local SHA-256
+├── dashboard.py                # Panel interactivo de métricas
+└── cybercash.html              # Interfaz Web interactiva de demostración
+```
 ## 🔄 Arquitectura y Flujo Lógico de Defensa (Pipeline)
 
 El flujo de seguridad se articula en 4 pasos críticos:
@@ -52,171 +94,108 @@ El flujo de seguridad se articula en 4 pasos críticos:
 
 ## 💻 Código de la Solución
 
-### 🧠 Motor de Inferencia y Escalado de Dificultad (`analyze_risk`)
+### 🧠 1. AI Threat Hunter (src/scheduler/main.py)
 
 ```python
-def analyze_risk(ip, req_1min, req_10min):
-    """
-    Asks Vertex AI to evaluate risk based on statistical volume.
-    """
-    # Professional Security Prompt
+# Muestra simplificada de la integración con Vertex AI y Gemini
+@functions_framework.http
+def run_threat_hunter(request):
+    init_services()
+    telemetry_data = get_aggregated_telemetry()
+    
+    if not telemetry_data:
+        return {"status": "No suspicious traffic detected"}, 200
+
     prompt = f"""
-You are a specialized Cyber-Security Risk Engine.
-Analyze the following telemetry for Source IP: {ip}
+    You are the CyberCash threat analysis engine. Analyze the telemetry from the last 15 minutes.
+    
+    Penalty rules:
+    1. If `failure_rate` > 0.8 and requests > 20: It's a brute-force bot. Difficulty: 8, TTL: 7200s.
+    2. If it solves everything (high successful_pows) but requests > 100: Advanced scraper. Difficulty: 6, TTL: 3600s.
+    3. Normal traffic: Do not include in your response.
+    
+    Telemetry to analyze: {json.dumps(telemetry_data)}
+    """
 
-- Requests in the last 60 seconds: {req_1min}
-- Total requests in the last 10 minutes: {req_10min}
+    generation_config = GenerationConfig(
+        temperature=0.0,
+        response_mime_type="application/json",
+        response_schema=response_schema
+    )
 
-CRITERIA:
-- If 1min requests > 10: High Risk (Potential Brute Force). Return 8.
-- If 1min requests > 5: Medium Risk (Suspicious Burst). Return 6.
-- If 10min requests > 30: High Risk (Sustained Scraping/DoS). Return 8.
-- If 10min requests are significantly higher than 1min average: Sustained Attack. Return 8.
+    response = model.generate_content(prompt, generation_config=generation_config)
+    penalties = json.loads(response.text)
 
-TASK:
-Analyze if the behavior is Human (Low frequency) or Bot (High/Consistent frequency).
-Return ONLY the recommended HashCash difficulty level:
-- 4: Low Risk / Likely Human.
-- 6: Medium Risk / Suspicious.
-- 8: High Risk / Attack Detected.
-
-OUTPUT: Return ONLY the integer (4, 6, or 8). No text.
-"""
-
-    try:
-        response = model.generate_content(prompt)
-        # Extract only digits to be safe
-        if not response or not response.text:
-            return 4
-
-        result = "".join(filter(str.isdigit, response.text))
-        difficulty = int(result) if result in ["4", "6", "8"] else 4
-
-        print(f"DEBUG: AI Decision for {ip} -> Difficulty Level: {difficulty}")
-
-        return difficulty
-    except Exception as e:
-        print(f"AI Error: {e}")
-        return 4  # Fail-safe default
+    # Inyección masiva y atómica de penalizaciones hacia MongoDB
+    mongo_operations = [
+        UpdateOne(
+            {"ip": p["ip"]},
+            {"$set": {"difficulty": p.get("difficulty", 6), "expires_at": datetime.now(UTC) + timedelta(seconds=p.get("ttl_seconds", 3600))}},
+            upsert=True
+        ) for p in penalties if p.get("ip")
+    ]
+    
+    if mongo_operations:
+        db.ai_penalties.bulk_write(mongo_operations)
+    
+    return {"status": "success", "penalties_applied": len(mongo_operations)}, 200
 ```
 
 ---
 
-### 🌐 Gateway de Seguridad (`cybercash_gateway`)
+### 🌐 2. API Gateway & Fast Path Validation (src/gateway/main.py)
 
 ```python
 @functions_framework.http
 def cybercash_gateway(request):
-    request_json = request.get_json(silent=True) or {}
-    nonce = request_json.get("nonce")
-    challenge = request_json.get("challenge")
+    client_ip = get_client_ip(request)
+    auth_header = request.headers.get("X-CyberCash-Token", "")
 
-    # Client IP identification
-    if "X-Forwarded-For" in request.headers:
-        client_ip = request.headers.get("X-Forwarded-For").split(",")[0].strip()
-    else:
-        client_ip = request.remote_addr
+    # 1. Validar Token HMAC (Fast Path sin llamadas a Base de Datos)
+    if auth_header.startswith("Bearer "):
+        token = auth_header.replace("Bearer ", "").strip()
+        if is_token_valid(token, client_ip):
+            return {"status": "Access granted"}, 200
 
-    datetime_now = datetime.now(UTC)
-    # 2. Extract Statistics from MongoDB (The "Food" for the AI)
-    one_min_ago = datetime_now - timedelta(minutes=1)
-    ten_min_ago = datetime_now - timedelta(minutes=10)
+    # 2. Análisis Rápido de Riesgo (Memoria RAM Cache -> DB)
+    difficulty = analyze_risk_fast(client_ip, count_10min)
 
-    # Fast counts using indexed fields
-    count_1min = db.audit_logs.count_documents(
-        {"ip": client_ip, "timestamp": {"$gte": one_min_ago}}
-    )
-    count_10min = db.audit_logs.count_documents(
-        {"ip": client_ip, "timestamp": {"$gte": ten_min_ago}}
-    )
-
-    print(f"TELEMETRY: IP={client_ip} | Window_1min={count_1min} | Window_10min={count_10min}")
-
-    # Adaptive difficulty logic
-    difficulty = 4
-
-    if count_1min > 5:
-        difficulty = analyze_risk(
-            ip=client_ip, req_1min=count_1min, req_10min=count_10min
-        )
-
-    # Phase 1: Challenge Request
+    # 3. Fase de Desafío (Emisión)
     if not request_json or nonce is None:
         dynamic_challenge = str(uuid.uuid4())[:8]
+        db.pending_challenges.insert_one({
+            "challenge": dynamic_challenge, "ip": client_ip, 
+            "difficulty": difficulty, "created_at": datetime.now(UTC)
+        })
+        return {"message": "PoW Required", "challenge": dynamic_challenge, "difficulty": difficulty}, 401
 
-        # LOG Challenge requested event
-        log_event(
-            ip=client_ip,
-            event_type="CHALLENGE_REQUESTED",
-            challenge=dynamic_challenge,
-            difficulty=difficulty,
-            details="New challenge issued",
-        )
-
-        # INSERT spent_nonces
-        db.spent_nonces.insert_one(
-            {
-                "token": dynamic_challenge,
-                "status": "active",
-                "ip": client_ip,
-                "created_at": datetime_now,
-            }
-        )
-
-        return {
-            "message": "This account is protected by Cybercash. You must solve a challenge to enter.",
-            "challenge": dynamic_challenge,
-            "difficulty": difficulty,
-            "system_status": "High Traffic - Increasing PoW"
-            if difficulty > 4
-            else "Normal",
-        }, 401
-
-    # Phase 2: Challenge Validation
-    valid_challenge = db.spent_nonces.find_one_and_delete({"token": challenge})
-
-    if not valid_challenge:
-        log_event(
-            client_ip,
-            "INVALID_CHALLENGE",
-            challenge,
-            difficulty,
-            "Challenge not found or reused",
-        )
-        return {"status": "Access deny", "error": "Invalid challenge"}, 403
+    # 4. Fase de Verificación Atómica (Protección contra Race Conditions)
+    challenge_data = db.pending_challenges.find_one_and_delete({
+        "challenge": challenge, "ip": client_ip
+    })
+    
+    if not challenge_data:
+        return {"error": "Invalid, expired, or IP mismatch"}, 403
 
     check = hashlib.sha256(f"{challenge}{nonce}".encode()).hexdigest()
+    if check.startswith("0" * challenge_data["difficulty"]):
+        new_token = generate_access_token(client_ip)
+        return {"status": "Access granted", "token": new_token}, 200
 
-    if check.startswith("0" * difficulty):
-        log_event(
-            client_ip,
-            "SUCCESS",
-            challenge,
-            difficulty,
-            "Valid PoW submitted",
-        )
-
-        return {
-            "status": "Access granted",
-            "message": f"User {challenge} accepted",
-        }, 200
-
-    return {"status": "Error: Insufficient proof of work"}, 403
+    return {"error": "Insufficient PoW"}, 403
 ```
 
 ---
 
 ## 📊 Resultados Experimentales
 
-Durante las pruebas de estrés ejecutadas en el entorno `cybercash-2026-production` para simular ataques de ráfaga, se obtuvieron los siguientes métricas de impacto:
+Durante las pruebas de estrés ejecutadas con scripts de ataque multihilo (`multithreading.py`), se obtuvieron las siguientes métricas de impacto:
 
-| Escenario | Volumen de Tráfico | Decisión IA | Impacto Atacante (Costo CPU) |
-| :--- | :--- | :--- | :--- |
-| **Orgánico** | 2 req / min | Nivel 4 | < 0.1s CPU |
-| **Sospechoso** | 7 req / min | Nivel 6 | ~ 3s CPU |
-| **Ataque Sostenido** | 15+ req / min | Nivel 8 | > 45s CPU |
-
-> 💥 **Análisis de Impacto:** Al alcanzar el Nivel 8, un bot que intente ejecutar 1,000 peticiones requeriría **más de 12 horas** de procesamiento continuo para completarlas. Esto invalida por completo la viabilidad técnica y económica de un ataque de fuerza bruta o raspado de datos (*scraping*).
+| Perfil de Tráfico | Comportamiento | Nivel Asignado por IA | Tiempo de Cómputo (Cliente) | Carga en Servidor |
+| :--- | :--- | :--- | :--- | :--- |
+| **Humano / Orgánico** | Peticiones espaciadas | Dificultad 4 | `< 0.05s` | Mínima |
+| **Advanced Scraper** | Concurrencia media, 100+ reqs | Dificultad 6 (TTL 1h) | `~ 2.5s` por hilo | Nula (Verificación) |
+| **Brute-Force Botnet** | Tasa de fallo PoW > 80% | Dificultad 8 (TTL 2h) | `> 40s` por hilo | Nula (CPU atacante saturada) |
 
 ---
 
