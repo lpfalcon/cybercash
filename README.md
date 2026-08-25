@@ -78,18 +78,6 @@ CyberCash_terraform/
 ├── dashboard.py                # Panel interactivo de métricas
 └── cybercash.html              # Interfaz Web interactiva de demostración
 ```
-## 🔄 Arquitectura y Flujo Lógico de Defensa (Pipeline)
-
-El flujo de seguridad se articula en 4 pasos críticos:
-
-1. **Interceptación y Telemetría:** Cada petición entrante se registra en MongoDB Atlas para calcular métricas de tráfico utilizando ventanas deslizantes de 1 y 10 minutos (`req_1min`, `req_10min`).
-2. **Análisis de Ráfaga (*Burst Analysis*):** Se calculan los volúmenes de tráfico recientes y se inyectan como *features* al motor de decisión de IA.
-3. **Inferencia Adaptativa (Vertex AI):** El modelo Gemini evalúa la telemetría y ajusta dinámicamente el nivel de dificultad criptográfica:
-   * 🟢 **Riesgo Bajo (Dificultad 4):** Tráfico humano normal. Latencia imperceptible.
-   * 🟡 **Riesgo Medio (Dificultad 6):** Anomalía detectada (> 5 req/min). Mitigación preventiva.
-   * 🔴 **Riesgo Alto (Dificultad 8):** Ataque confirmado o saturación de API. Mitigación agresiva.
-4. **Respuesta de Mitigación:** Si no se presenta una prueba válida, el servidor emite una respuesta `HTTP 401 Unauthorized` junto con un encabezado `X-Hashcash-Challenge`. El cliente debe resolver el desafío matemático antes de acceder al backend real.
-
 ---
 
 ## 💻 Código de la Solución
