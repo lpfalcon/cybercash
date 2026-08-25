@@ -8,16 +8,25 @@ import vertexai
 from vertexai.generative_models import GenerativeModel, GenerationConfig
 
 # ==========================================
-# GLOBAL CONFIGURATION
+# LAZY INITIALIZATION (Evita fallos en Healthcheck)
 # ==========================================
-PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
-REGION = os.environ.get("REGION", "us-central1")
-vertexai.init(project=PROJECT_ID, location=REGION)
-model = GenerativeModel("gemini-2.5-flash")
+model = None
+db = None
 
-MONGO_URI = os.environ.get("MONGO_URI")
-mongo_client = MongoClient(MONGO_URI, maxPoolSize=20)
-db = mongo_client.cybercash_db
+def init_services():
+    global model, db
+    if model is None:
+        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+        region = os.environ.get("REGION", "us-central1")
+        vertexai.init(project=project_id, location=region)
+        model = GenerativeModel("gemini-2.5-flash-lite")
+    
+    if db is None:
+        mongo_uri = os.environ.get("MONGO_URI")
+        if not mongo_uri:
+            raise ValueError("MONGO_URI environment variable is missing")
+        mongo_client = MongoClient(mongo_uri, maxPoolSize=20)
+        db = mongo_client.cybercash_db
 
 # ==========================================
 # TELEMETRY AGGREGATION
@@ -27,7 +36,6 @@ def get_aggregated_telemetry():
     fifteen_mins_ago = datetime.now(UTC) - timedelta(minutes=15)
     
     pipeline = [
-        # IMPORTANT: Ensure you have an index on {"timestamp": 1} in MongoDB
         {"$match": {"timestamp": {"$gte": fifteen_mins_ago}}},
         {"$group": {
             "_id": "$ip",
@@ -39,9 +47,9 @@ def get_aggregated_telemetry():
                 "$sum": {"$cond": [{"$eq": ["$event", "SUCCESS"]}, 1, 0]}
             }
         }},
-        {"$match": {"total_requests": {"$gt": 10}}}, # Ignore normal/low traffic
-        {"$sort": {"total_requests": -1}}, # Analyze the noisiest IPs first
-        {"$limit": 500} # SAFETY LIMIT: Prevents sending an infinite payload to Gemini
+        {"$match": {"total_requests": {"$gt": 10}}},
+        {"$sort": {"total_requests": -1}},
+        {"$limit": 500}
     ]
     
     results = list(db.audit_logs.aggregate(pipeline))
@@ -64,45 +72,47 @@ def get_aggregated_telemetry():
 def run_threat_hunter(request):
     print("Starting AI threat hunt...")
     
-    telemetry_data = get_aggregated_telemetry()
-    
-    if not telemetry_data:
-        print("Normal traffic. No action required.")
-        return {"status": "No suspicious traffic detected"}, 200
-
-    prompt = f"""
-    You are the CyberCash threat analysis engine. Analyze the telemetry from the last 15 minutes.
-    
-    Penalty rules:
-    1. If `failure_rate` > 0.8 and requests > 20: It's a brute-force bot. Difficulty: 8, TTL: 7200s.
-    2. If it solves everything (high successful_pows) but requests > 100: Advanced scraper. Difficulty: 6, TTL: 3600s.
-    3. Normal traffic: Do not include in your response.
-    
-    Telemetry to analyze:
-    {json.dumps(telemetry_data)}
-    """
-
-    # Enforce strict output structure using OpenAPI Schema
-    response_schema = {
-        "type": "ARRAY",
-        "items": {
-            "type": "OBJECT",
-            "properties": {
-                "ip": {"type": "STRING"},
-                "difficulty": {"type": "INTEGER"},
-                "ttl_seconds": {"type": "INTEGER"}
-            },
-            "required": ["ip", "difficulty", "ttl_seconds"]
-        }
-    }
-
-    generation_config = GenerationConfig(
-        temperature=0.0,
-        response_mime_type="application/json",
-        response_schema=response_schema
-    )
-
     try:
+        # Inicializa conexiones solo cuando se recibe una petición HTTP
+        init_services()
+        
+        telemetry_data = get_aggregated_telemetry()
+        
+        if not telemetry_data:
+            print("Normal traffic. No action required.")
+            return {"status": "No suspicious traffic detected"}, 200
+
+        prompt = f"""
+        You are the CyberCash threat analysis engine. Analyze the telemetry from the last 15 minutes.
+        
+        Penalty rules:
+        1. If `failure_rate` > 0.8 and requests > 20: It's a brute-force bot. Difficulty: 8, TTL: 7200s.
+        2. If it solves everything (high successful_pows) but requests > 100: Advanced scraper. Difficulty: 6, TTL: 3600s.
+        3. Normal traffic: Do not include in your response.
+        
+        Telemetry to analyze:
+        {json.dumps(telemetry_data)}
+        """
+
+        response_schema = {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "ip": {"type": "STRING"},
+                    "difficulty": {"type": "INTEGER"},
+                    "ttl_seconds": {"type": "INTEGER"}
+                },
+                "required": ["ip", "difficulty", "ttl_seconds"]
+            }
+        }
+
+        generation_config = GenerationConfig(
+            temperature=0.0,
+            response_mime_type="application/json",
+            response_schema=response_schema
+        )
+
         response = model.generate_content(prompt, generation_config=generation_config)
         penalties = json.loads(response.text)
         
@@ -127,7 +137,6 @@ def run_threat_hunter(request):
                 )
                 print(f"AI detected attack. Penalizing IP {ip} with difficulty={difficulty}")
 
-        # Execute all database updates in a single efficient batch
         if mongo_operations:
             result = db.ai_penalties.bulk_write(mongo_operations)
             return {

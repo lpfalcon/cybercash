@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Set this to your API Gateway URL or Local URL
-URL = os.getenv("GATEWAY_URL", "http://127.0.0.1:8080")
+URL = os.getenv("URL")
 
 print("""
 ====================================================
@@ -58,7 +58,7 @@ def simulate_legitimate_user(user_id):
 
 def simulate_dumb_bot(bot_id):
     """Simulates a bot that tries to guess the PoW or just spams fake nonces."""
-    ip = f"198.51.100.{random.randint(1, 5)}" # Small botnet reusing IPs
+    ip = f"198.51.100.{random.randint(1, 3)}" # Small botnet reusing IPs
     headers = {"X-Forwarded-For": ip}
     
     try:
@@ -68,13 +68,14 @@ def simulate_dumb_bot(bot_id):
             # Bot sends a random incorrect nonce
             fake_nonce = random.randint(1000, 9999)
             res2 = requests.post(URL, headers=headers, json={"challenge": data["challenge"], "nonce": fake_nonce})
-            return f"🤖 Bot {bot_id} ({ip}) | Guessed wrong PoW | Result: {res2.status_code}"
+            return f"🤖 Bot {bot_id} ({ip}) | Guessed wrong PoW | Assigned Dif: {data.get('difficulty')}"
     except Exception as e:
          return f"Bot {bot_id} Error: {e}"
 
 def simulate_ddos_flood(request_id):
     """Simulates a volumetric DDoS attack with heavy IP spoofing."""
-    ip = f"10.0.{random.randint(1,255)}.{random.randint(1,255)}" # Massive IP spoofing
+
+    ip = f"10.0.0.{random.randint(1,5)}" # Spoofed IPs for DDoS
     headers = {"X-Forwarded-For": ip}
     
     try:
@@ -96,7 +97,7 @@ def run_simulation():
     for i in range(1, 11):
         tasks.append((simulate_legitimate_user, i))
         
-    # 2. Add 30 Dumb Bots (Will generate FAILED_POW events)
+    # 2. Add 30 Dumb Bots (Will trigger AI detection and penalties)
     for i in range(1, 31):
         tasks.append((simulate_dumb_bot, i))
         
@@ -113,7 +114,7 @@ def run_simulation():
         
         for future in futures:
             print(future.result())
-            time.sleep(0.1) # Slight delay to make logs readable
+            time.sleep(0.05) # Slight delay to make logs readable
 
     print("\n--- SIMULATION COMPLETE ---")
     print("Wait 10 seconds for the Dashboard to auto-refresh and display the new data.")

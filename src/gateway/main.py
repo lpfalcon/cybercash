@@ -19,7 +19,7 @@ SECRET_KEY = os.environ.get("CYBERCASH_SECRET")
 # DB connection
 MONGO_URI = os.environ.get("MONGO_URI")
 # Reuse the connection pool between invocations (Serverless best practice)
-mongo_client = MongoClient(MONGO_URI, maxPoolSize=50)
+mongo_client = MongoClient(MONGO_URI, maxPoolSize=50, tz_aware=True)
 db = mongo_client.cybercash_db
 
 # Local in-memory cache to prevent database saturation during DDoS attacks
@@ -107,8 +107,9 @@ def analyze_risk_fast(ip, req_10min):
         return penalty.get("difficulty", 8)
         
     # 3. Baseline heuristic rules (Fallbacks if AI hasn't analyzed yet)
-    if req_10min > 50: return 8
-    if req_10min > 20: return 6
+
+    if req_10min >= 50: return 8
+    if req_10min >= 20: return 6
     return 4
 
 

@@ -82,5 +82,30 @@ Thumbs.db
 # ==========================================
 # Terraform
 # ==========================================
+# Ignore Terraform directories and lock files
+.terraform/
+# Ignore Terraform state lock files
+.terraform.tfstate.lock.info
 
+# Ignore Terraform state files and backup files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Ignore variable definition files, override files, and any .tfvars files that are not under version control
 *.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore crash logs
+crash.log
+crash.*.log
+
+
+# ==========================================
+# GENERATED AND PACKAGED FILES
+# ==========================================
+*.zip

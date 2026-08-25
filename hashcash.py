@@ -1,6 +1,5 @@
 import hashlib
 import os
-import platform
 import time
 
 import requests
@@ -8,12 +7,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 URL = os.getenv("URL")
-
-
-def get_device_fingerprint():
-    data = f"{platform.processor()}-{platform.system()}-{platform.node()}"
-    return hashlib.sha256(data.encode()).hexdigest()
-
 
 def solve_hashcash(input_data, difficulty):
     objective = "0" * difficulty
@@ -28,7 +21,6 @@ def solve_hashcash(input_data, difficulty):
 def simulate_traffic(total_requests=15):
     try:
         print("🚀 Iniciando CyberCash Client...")
-        fingerprint = get_device_fingerprint()
         auth_token = None
 
         for i in range(1, total_requests + 1):
@@ -36,7 +28,7 @@ def simulate_traffic(total_requests=15):
             start_time = time.time()
 
             # Preparamos headers dinámicos
-            headers = {"X-Device-Fingerprint": fingerprint}
+            headers = {}
             if auth_token:
                 headers["X-CyberCash-Token"] = f"Bearer {auth_token}"
                 print(f"🔑 Usando Token: {auth_token[:15]}...")
@@ -86,4 +78,4 @@ def simulate_traffic(total_requests=15):
 
 
 if __name__ == "__main__":
-    simulate_traffic(100)
+    simulate_traffic(5)
