@@ -1,3 +1,10 @@
+
+
+
+<video src="https://github.com/user-attachments/assets/e61f513f-dc79-4734-9b9b-7ad957410faf" controls width="100%">
+</video>
+
+
 # 🛡️ CyberCash 2026: Defensa Perimetral Adaptativa
 
 > **Defensa Perimetral Adaptativa mediante Inteligencia Artificial y Costo Computacional Asimétrico**  
