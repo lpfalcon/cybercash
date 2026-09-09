@@ -1,6 +1,4 @@
 
-
-
 <video src="https://github.com/user-attachments/assets/e61f513f-dc79-4734-9b9b-7ad957410faf" controls width="100%">
 </video>
 
@@ -35,6 +33,13 @@ CyberCash invierte esta relación trasladando el 99% del consumo computacional a
 
 El sistema se compone de dos microservicios Serverless independientes desacoplados para garantizar baja latencia y alta disponibilidad:
 
+
+
+<video src="https://github.com/user-attachments/assets/2d2d737f-b859-424f-8d69-69394d835b80" controls width="100%">
+</video>
+
+
+
 1. **API Gateway & Gatekeeper (`src/gateway`):**
    * **Fast Path:** Autentica usuarios legítimos mediante tokens firmados con **HMAC SHA-256** (libres de estado / *stateless*).
    * **Protección Local de BD:** Utiliza un caché local en RAM (`LOCAL_PENALTY_CACHE`) para filtrar atacantes recurrentes sin saturar MongoDB.
@@ -46,6 +51,7 @@ El sistema se compone de dos microservicios Serverless independientes desacoplad
    * Emite penalizaciones estructuradas (**JSON Schema**) guardadas en MongoDB con TTL automático que el Gateway consume en tiempo real.
 
 ---
+
 
 ## 🛠️ Stack Tecnológico
 
