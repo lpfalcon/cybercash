@@ -39,7 +39,7 @@ El sistema se compone de dos microservicios Serverless independientes desacoplad
 
 
 
-<video src="[https://github.com/user-attachments/assets/2d2d737f-b859-424f-8d69-69394d835b80](https://github.com/user-attachments/assets/ace3575e-e622-4d18-8c69-e15020aa885e)" controls width="100%">
+<video src="https://github.com/user-attachments/assets/ace3575e-e622-4d18-8c69-e15020aa885e" controls width="100%">
 </video>
 
 
