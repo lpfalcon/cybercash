@@ -24,7 +24,7 @@ resource "google_storage_bucket" "function_bucket" {
 }
 
 # ==========================================
-# 1. EMPAQUETADO DE CÓDIGO
+#  EMPAQUETADO DE CÓDIGO
 # ==========================================
 
 # Comprime la carpeta del Gateway
@@ -56,7 +56,7 @@ resource "google_storage_bucket_object" "scheduler_code" {
 }
 
 # ==========================================
-# 3. SEGURIDAD E IAM (Movido arriba para el time_sleep)
+# SEGURIDAD E IAM (Movido arriba para el time_sleep)
 # ==========================================
 
 # Obtiene datos del proyecto para construir el email de las cuentas de servicio
@@ -93,7 +93,7 @@ resource "google_project_iam_member" "compute_builder" {
   depends_on = [google_project_service.services]
 }
 
-# --- NUEVO: Permiso de Storage Admin para los buckets temporales de Cloud Build ---
+# --- Permiso de Storage Admin para los buckets temporales de Cloud Build ---
 resource "google_project_iam_member" "compute_storage_admin" {
   project    = var.project_id
   role       = "roles/storage.objectAdmin"
@@ -123,7 +123,7 @@ resource "google_project_iam_member" "threat_hunter_vertex" {
   member  = "serviceAccount:${google_service_account.threat_hunter_sa.email}"
 }
 
-# --- NUEVO: Temporizador para esperar a que los permisos IAM se propaguen ---
+# --- Temporizador para esperar a que los permisos IAM se propaguen ---
 resource "time_sleep" "wait_for_iam" {
   depends_on = [
     google_project_iam_member.cloudbuild_logs,
@@ -152,7 +152,7 @@ resource "google_service_account" "scheduler_sa" {
 }
 
 # ==========================================
-# 2. FUNCIONES CLOUD (V2)
+# FUNCIONES CLOUD (V2)
 # ==========================================
 
 # Función Gateway (Rápida, sin IA)
@@ -240,7 +240,7 @@ resource "google_cloud_run_service_iam_member" "scheduler_access" {
 }
 
 # ==========================================
-# 4. API GATEWAY PÚBLICO
+#  API GATEWAY PÚBLICO
 # ==========================================
 
 resource "google_api_gateway_api" "api" {
@@ -286,7 +286,7 @@ resource "google_api_gateway_gateway" "gateway" {
 }
 
 # ==========================================
-# 5. CLOUD SCHEDULER JOB (El "Cron" de la IA)
+#  CLOUD SCHEDULER JOB (El "Cron" de la IA)
 # ==========================================
 
 resource "google_cloud_scheduler_job" "threat_hunter_trigger" {

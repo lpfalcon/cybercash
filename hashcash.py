@@ -54,7 +54,7 @@ def simulate_traffic(total_requests=15):
                 )
 
                 if result_token.status_code == 200:
-                    # ¡GUARDAMOS EL TOKEN AQUÍ PARA EL SIGUIENTE INTENTO!
+                    # ALMACENAR EL TOKEN  PARA EL SIGUIENTE INTENTO
                     auth_token = result_token.json().get("token")
                     duration = time.time() - start_time
                     print(f"✅ Acceso Concedido en {duration:.2f}s. Token guardado.")
